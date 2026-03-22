@@ -2,144 +2,45 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>极简幸运饼干 Fortune Cookie</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的幸运饼干</title>
     <style>
-        :root {
-            --bg: #FFF9F2;
-            --cookie: #F5D186;
-            --ink: #3A3226;
-            --paper: #FFFFFF;
-        }
+        :root { --bg: #FFF9F2; --cookie: #F5D186; --ink: #3A3226; --paper: #FFFFFF; }
+        body { background: var(--bg); margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Courier New', Courier, "Microsoft YaHei", monospace; -webkit-tap-highlight-color: transparent; }
+        
+        /* 舞台区域 */
+        #stage { position: relative; width: 320px; height: 320px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 
-        body {
-            margin: 0;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: 'Courier New', Courier, "PingFang SC", "Microsoft YaHei", monospace;
-            overflow: hidden;
-            touch-action: manipulation;
-        }
+        /* 饼干容器 */
+        .cookie-box { position: relative; width: 220px; height: 160px; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10; }
+        
+        .half { position: absolute; width: 120px; height: 160px; background: var(--cookie); border: 4px solid var(--ink); transition: all 0.4s ease-in-out; box-sizing: border-box; }
+        .left { left: 0; border-radius: 100px 20px 20px 100px; border-right: none; transform-origin: center right; }
+        .right { right: 0; border-radius: 20px 100px 100px 20px; border-left: none; transform-origin: center left; }
 
-        /* 游戏区域 */
-        #stage {
-            position: relative;
-            width: 300px;
-            height: 250px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
+        /* 手写锯齿感 */
+        .half::after { content: ''; position: absolute; width: 14px; height: 100%; background-image: linear-gradient(45deg, var(--ink) 25%, transparent 25%), linear-gradient(-45deg, var(--ink) 25%, transparent 25%); background-size: 12px 12px; top: 0; }
+        .left::after { right: -7px; }
+        .right::after { left: -7px; transform: rotate(180deg); }
 
-        /* 饼干组件 */
-        .cookie-box {
-            position: relative;
-            width: 180px;
-            height: 130px;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.2);
-            z-index: 10;
-        }
+        /* 裂开动作 */
+        .open .left { transform: translateX(-90px) rotate(-35deg); opacity: 0.7; }
+        .open .right { transform: translateX(90px) rotate(35deg); opacity: 0.7; }
 
-        .half {
-            position: absolute;
-            width: 100px;
-            height: 130px;
-            background: var(--cookie);
-            border: 4px solid var(--ink);
-            transition: all 0.4s ease-in-out;
-        }
+        /* 能量便签纸 */
+        #note { position: absolute; width: 240px; background: var(--paper); border: 1px solid #ddd; padding: 25px; box-shadow: 5px 5px 25px rgba(0,0,0,0.1); opacity: 0; transform: scale(0) translateY(0); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 5; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 100px; }
+        .open #note { opacity: 1; transform: scale(1.1) translateY(-170px); z-index: 20; }
+        
+        #text { font-size: 15px; color: var(--ink); line-height: 1.8; font-weight: bold; white-space: pre-wrap; word-break: break-all; }
 
-        .left {
-            left: 0;
-            border-radius: 80px 15px 15px 80px;
-            border-right: none;
-        }
-
-        .right {
-            right: 0;
-            border-radius: 15px 80px 80px 15px;
-            border-left: none;
-        }
-
-        /* 锯齿状裂纹 */
-        .half::before {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 100%;
-            background-image: linear-gradient(45deg, var(--ink) 25%, transparent 25%), 
-                              linear-gradient(-45deg, var(--ink) 25%, transparent 25%);
-            background-size: 10px 10px;
-            top: 0;
-        }
-        .left::before { right: -5px; }
-        .right::before { left: -5px; transform: rotate(180deg); }
-
-        /* 裂开动画 */
-        .open .left { transform: translateX(-70px) rotate(-20deg); opacity: 0.8; }
-        .open .right { transform: translateX(70px) rotate(20deg); opacity: 0.8; }
-
-        /* 便签纸条 */
-        #note {
-            position: absolute;
-            width: 200px;
-            min-height: 80px;
-            background: var(--paper);
-            border: 1px solid #CCC;
-            padding: 15px;
-            box-shadow: 3px 3px 0px rgba(0,0,0,0.05);
-            opacity: 0;
-            transform: scale(0.5) translateY(0);
-            transition: all 0.6s cubic-bezier(0.2, 1, 0.3, 1);
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .open #note {
-            opacity: 1;
-            transform: scale(1.1) translateY(-140px);
-            z-index: 20;
-        }
-
-        #text {
-            font-size: 14px;
-            color: #444;
-            line-height: 1.5;
-            font-weight: bold;
-        }
-
-        .hint {
-            margin-top: 50px;
-            font-size: 13px;
-            color: #A08C75;
-            letter-spacing: 1px;
-        }
-
-        /* 点击波纹效果 */
-        .particle {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: var(--cookie);
-            border-radius: 50%;
-            pointer-events: none;
-        }
+        .hint { margin-top: 60px; color: #A08C75; font-size: 14px; letter-spacing: 2px; animation: breathe 2s infinite ease-in-out; }
+        @keyframes breathe { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.9; } }
     </style>
 </head>
 <body>
 
-    <div id="stage" onclick="toggleCookie()">
-        <div id="note">
-            <div id="text"></div>
-        </div>
+    <div id="stage" onclick="toggle()">
+        <div id="note"><div id="text"></div></div>
         <div class="cookie-box" id="cookie">
             <div class="half left"></div>
             <div class="half right"></div>
@@ -150,75 +51,53 @@
 
     <script>
         const quotes = [
-            "DO NOT BE AFRAID OF GOING SLOWLY, BE AFRAID ONLY OF STANDING STILL.\n不怕慢,就怕站。",
-            "THE BEST TIME TO PLANT A TREE WAS 20 YEARS AGO. THE SECOND BEST TIME IS NOW.\n种一棵树最好的时间是十年前,其次是现在。",
-            "EVERYTHING YOU'VE EVER WANTED IS ON THE OTHER SIDE OF FEAR.\n你想要的一切,都在恐惧的另一面。",
-            "YOUR TALENT DETERMINES WHAT YOU CAN DO. YOUR MOTIVATION DETERMINES HOW MUCH YOU ARE WILLING TO DO.\n天赋决定你能做什么,动力决定你愿意做多少。",
             "STAY GOLD.\n永葆纯真。",
-            "WHATEVER YOU ARE, BE A GOOD ONE.\n无论你是什么样的人,做个好人。"
+            "ACTION IS THE ANTIDOTE TO ANXIETY.\n行动是焦虑的解药。",
+            "THE BEST TIME IS NOW.\n最好的时间就是现在。",
+            "SUCCESS IS A JOURNEY, NOT A DESTINATION.\n成功是旅程，而非终点。",
+            "BELIEVE IN YOURSELF.\n相信你自己。",
+            "EVERY DAY IS A NEW BEGINNING.\n每一天都是新的开始。"
         ];
 
-        let isOpen = false;
+        let state = false; // false = 关, true = 开
 
-        function toggleCookie() {
-            const cookie = document.getElementById('cookie');
-            const noteText = document.getElementById('text');
+        function toggle() {
+            const stage = document.getElementById('stage');
+            const text = document.getElementById('text');
             const hint = document.getElementById('hint');
 
-            if (!isOpen) {
-                // 裂开
-                cookie.classList.add('open');
-                isOpen = true;
+            if (!state) {
+                // 开启
+                stage.classList.add('open');
+                text.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+                hint.innerText = "● 点击屏幕重置 ●";
+                state = true;
                 playCrunch();
-                createParticles();
-                
-                // 随机语录
-                const q = quotes[Math.floor(Math.random() * quotes.length)];
-                noteText.innerText = q;
-                hint.innerText = "● 点击任意处重置 ●";
             } else {
                 // 重置
-                cookie.classList.remove('open');
-                isOpen = false;
-                noteText.innerText = "";
+                stage.classList.remove('open');
                 hint.innerText = "● 点击饼干开启幸运 ●";
+                state = false;
             }
         }
 
-        // 模拟卡擦声 (Web Audio API)
+        // 模拟真实的卡擦声
         function playCrunch() {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const bufferSize = audioCtx.sampleRate * 0.1;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1; // 白噪声模拟碎裂
-            }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            noise.connect(gain);
-            gain.connect(audioCtx.destination);
-            noise.start();
-        }
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
 
-        // 碎屑特效
-        function createParticles() {
-            for (let i = 0; i < 8; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                document.getElementById('stage').appendChild(p);
-                const angle = Math.random() * Math.PI * 2;
-                const dist = 50 + Math.random() * 50;
-                p.style.transition = "all 0.5s ease-out";
-                setTimeout(() => {
-                    p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
-                    p.style.opacity = '0';
-                }, 10);
-                setTimeout(() => p.remove(), 600);
-            }
+                oscillator.type = 'sawtooth';
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.12);
+            } catch(e) { console.log("音频播放失败，请确保浏览器允许音效"); }
         }
     </script>
 </body>
